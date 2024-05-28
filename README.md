@@ -103,4 +103,18 @@ class PostController extends Controller
     }
 }
 ```
-##Hope this code will be useful for you. 
+
+# Methors 3
+### Install Plugin With command 
+```language
+composer require ridoy/laravel-bangla-slug
+```
+### Insert Data With This Line 
+```language
+use Ridoy\Bangla\Slug\Facade\BanglaSlug;
+
+$banglaText = "আমার সোনার বাংলা";
+$englishSlug = BanglaSlug::create($banglaText);
+$englishSlug = Str::slug($englishText);
+```
+## Hope this code will be useful for you. 
