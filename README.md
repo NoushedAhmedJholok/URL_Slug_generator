@@ -1,66 +1,106 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Automatice Slug generator In Laravel 10
 
-## About Laravel
+### Install 'sluggable' Plugin
+### Command
+```language
+composer require cviebrock/eloquent-sluggable
+```
+### Post.php ( Model ) Edit or Config 
+```language
+<?php
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+namespace App\Models;
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Cviebrock\EloquentSluggable\Sluggable; // call this 
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+class Post extends Model
+{
+    use HasFactory;
+    //add this line (start)
+    use Sluggable;
+    public function Sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => ['title']
+            ]
+        ];
+    }
+        //add this line (End)
+}
+```
+### Controller For Insert data 
+```language
+ function postcreate(Request $request){
+        
+       $data =new Post;
+       $data -> title = $request->title;
+       $data -> content = $request->content;
+       $data->save();
+        return redirect()->back();
+    }
+```
+### Post List 
+```language
+@foreach ($posts as $item)
+    <tr>
+        <td>{{$item->id}}</td>
+        <td>{{$item->title}}</td>
+        <td><textarea name="" id="" cols="30" rows="0">{{$item->content}}</textarea></td>
+        <td><a class="btn btn-info" href="{{url('/post/single/')}}/{{$item->slug}}">Show Post</a></td>
+    </tr>
+@endforeach
+```
+### Route For View Single Post 
+```language
+Route::get('/post/single/{slug}', [App\Http\Controllers\PostController::class, 'singlepost'])->name('singlepost');
+```
+### Controller For view Single Post 
+```language
+function singlepost($slug){
+        $single_post = Post::where('slug', $slug)->get();
+        return view('single_post', compact('single_post'));
+    }
+```
+## If You want to Bangla Title to English Slug Generator 
+### Than Install this plugin 
+### Command 
+```language
+composer require sohibd/laravelslug
+```
+### and Edit Controller and insert Data / use 
+```language
+<?php
 
-## Learning Laravel
+namespace App\Http\Controllers;
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+use Illuminate\Http\Request;
+use App\Models\Post;
+// use Sohibd\Laravelslug\Generate; // This bangla Slug Plugin 
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+class PostController extends Controller
+{
+    function post(){
+        $posts = Post::all();
+        return view('post', compact('posts'));
+    }
+    function postcreate(Request $request){
+        
+       $data =new Post;
+       $data -> title = $request->title;
+       $data -> content = $request->content;
+       $data -> slug = Generate::Enslug($request->title); // bangla to English URL Slug
+       $data->save();
+        return redirect()->back();
+    }
+    function singlepost($slug){
+        $single_post = Post::where('slug', $slug)->get();
+        return view('single_post', compact('single_post'));
+    }
+}
+```
+##Hope this code will be useful for you. 
